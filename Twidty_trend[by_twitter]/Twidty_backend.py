@@ -124,7 +124,7 @@ class Twidty(object):
             if count_row == 100:
                 # get only 100 tweets
                 break
-        df.to_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(keyword.replace('#', '')), index=False)
+        df.to_csv(r'xxxxxxxxxxxxxx'.format(keyword.replace('#', '')), index=False) # xxxx is enter your path where you want to save database
 
     def frequency_analysis(self, keyword):
         # 2 modes
@@ -134,11 +134,11 @@ class Twidty(object):
         file_name = "{}.csv".format(search_file)
         db = os.listdir('data')
         if '#' in keyword and file_name in db:
-            df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
+            df = pandas.read_csv(r'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.format(search_file))
             counter = self.extend_items(df['Hashtag'])
             return counter
         elif '#' not in keyword and file_name in db:
-            df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
+            df = pandas.read_csv(r'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.format(search_file))
             counter = self.extend_items(df['Text'])
             return counter
         elif file_name not in db:
@@ -147,7 +147,7 @@ class Twidty(object):
 
     def trend_tags(self, number):
         api = self.authentication()
-        WOEID = 23424960 # Where On Earth ID
+        WOEID = 23424960 # Where On Earth ID # Thailand 23424960
         trends = api.trends_place(id=WOEID) # json format
         # print(trends)
         trends_list = {}
