@@ -12,6 +12,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from mplpoptrend import MplPoptrend
 from mpltrendtags import MplTrendtags
 from Twidty_backend import Twidty
+from keyword_alert import Ui_Dialog as keyword_dialog
+from search_alert import Ui_Dialog as search_dialog
+from search_process import Ui_Dialog as search_p_dialog
+import datetime
 
 
 class Ui_MainWindow(object):
@@ -54,8 +58,11 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setFamily("Sarabun")
         font.setPointSize(14)
+        date = datetime.datetime.now()
         self.date_start.setFont(font)
         self.date_start.setCalendarPopup(True)
+        self.date_start.setTimeSpec(QtCore.Qt.LocalTime)
+        self.date_start.setDate(date.date())
         self.date_start.setObjectName("date_start")
         self.label_line = QtWidgets.QLabel(self.centralwidget)
         self.label_line.setGeometry(QtCore.QRect(250, 90, 20, 50))
@@ -71,6 +78,8 @@ class Ui_MainWindow(object):
         font.setPointSize(14)
         self.date_stop.setFont(font)
         self.date_stop.setCalendarPopup(True)
+        self.date_stop.setTimeSpec(QtCore.Qt.LocalTime)
+        self.date_stop.setDate(date.date())
         self.date_stop.setObjectName("date_stop")
         self.search_button = QtWidgets.QPushButton(self.centralwidget)
         self.search_button.setGeometry(QtCore.QRect(400, 100, 180, 31))
@@ -150,6 +159,7 @@ class Ui_MainWindow(object):
         self.search_button.clicked.connect(self.poptrend_graph)
 
 
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -157,7 +167,9 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Twidty"))
         self.label_date.setText(_translate("MainWindow", "DATE :: "))
+        self.date_start.setDisplayFormat(_translate("MainWindow", "yyyy-MM-dd"))
         self.label_line.setText(_translate("MainWindow", "-"))
+        self.date_stop.setDisplayFormat(_translate("MainWindow", "yyyy-MM-dd"))
         self.search_button.setText(_translate("MainWindow", "SEARCH"))
         self.label_poptrend.setText(_translate("MainWindow", "Popularity Trend"))
         self.label_trendtags.setText(_translate("MainWindow", "Trendy Hashtags"))
@@ -167,20 +179,47 @@ class Ui_MainWindow(object):
     def poptrend_graph(self):
         # print('poptrend')
         keyword = self.keyword_input.text()
-        if len(keyword) > 0:
+        if keyword != "":
             twidty = Twidty()
-            dict_result = twidty.frequency_analysis(keyword)
-            name = dict_result.keys()
-            size = dict_result.values()
+            dict_result = twidty.frequency_analysis(keyword, self.date_start.text(), self.date_stop.text())
+            if dict_result != False:
+                name = dict_result.keys()
+                size = dict_result.values()
 
-            self.widget_showgraph.canvas.axes.clear()
-            self.widget_showgraph.canvas.axes.pie(size, labels=name, 
-                                                    autopct='%1.1f%%',  
-                                                    startangle=10)
-            self.widget_showgraph.canvas.draw()
-            self.keyword_input.setText("")
-        elif keyword == "":
-            print('Enter keyword to seach please!!!')
+                self.widget_showgraph.canvas.axes.clear()
+                self.widget_showgraph.canvas.axes.pie(size, labels=name, 
+                                                            autopct='%1.1f%%',  
+                                                            startangle=10, )
+
+                self.widget_showgraph.canvas.draw()
+                self.keyword_input.setText("")
+                date = datetime.datetime.now()
+                self.date_start.setDate(date.date())
+                self.date_stop.setDate(date.date())
+            else:
+                Dialog = QtWidgets.QDialog()
+                ui = search_dialog()
+                ui.setupUi(Dialog)
+                Dialog.show()
+                user_acting = Dialog.exec_()
+                if user_acting == QtWidgets.QDialog.Accepted:
+                    twidty.search(keyword)
+                    self.keyword_input.setText("")
+                    date = datetime.datetime.now()
+                    self.date_start.setDate(date.date())
+                    self.date_stop.setDate(date.date())
+                    s_Dialog = QtWidgets.QDialog()
+                    s_ui = search_p_dialog()
+                    s_ui.setupUi(s_Dialog)
+                    s_Dialog.show()
+                    s_Dialog.exec_()
+                self.keyword_input.setText("")
+        else:
+            Dialog = QtWidgets.QDialog()
+            ui = keyword_dialog()
+            ui.setupUi(Dialog)
+            Dialog.show()
+            Dialog.exec_()
 
     def trendtags_graph(self):
         # print('trendtags')
@@ -190,7 +229,7 @@ class Ui_MainWindow(object):
         sizes = list(trendy_now.values())
         self.widget_showtrend.canvas.axes.clear()
         self.widget_showtrend.canvas.axes.bar(labels, sizes, 
-                                    color=['red', 'green', 'blue', 'orange', 'pink'])
+                        color=['red', 'green', 'blue', 'orange', 'pink'])
         self.widget_showtrend.canvas.axes.tick_params(axis='x', rotation=10)
         self.widget_showtrend.canvas.draw()
 
@@ -201,6 +240,7 @@ class Ui_MainWindow(object):
         for number in range(len(trend_now)):
             text = "{}\t{}".format(number+1, name[number])
             self.widget_showtrendtags.appendPlainText(text)
+
 
 
 if __name__ == "__main__":
