@@ -1,4 +1,4 @@
-import tweepy, pandas, re, emoji, spacy, pythainlp, collections, langdetect, os, ast, operator
+import tweepy, pandas, re, emoji, spacy, pythainlp, collections, datetime, os, ast, operator
 
 
 class Twidty(object):
@@ -111,11 +111,38 @@ class Twidty(object):
             if count_row == 100:
                 break
 
+        df = df.sort_values(by='Date')
         df.to_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(keyword.replace('#', '')), index=False)
+
+    def update_data(self, keyword):
+        api = self.authentication()
+        query = str(keyword).replace('#', '')
+        tweets = tweepy.Cursor(api.search, 
+                                q=query+'-filter:retweets', 
+                                result_type='recent', 
+                                tweet_mode='extended').items(100)
+        data_file = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(keyword.replace('#', '')))
+        for tweet in tweets:
+            date = tweet.created_at
+            today = datetime.datetime.now()
+            if date.date() != today.date():
+                break
+            elif date.date() == today.date():
+                try:
+                    text = tweet.retweeted_status.full_text
+                except:
+                    text = tweet.full_text
+
+                find_hashtags = self.check_hashtags(text)
+                text_intercept = self.text_intercept(text)
+                text_tokenize = self.nlp(text_intercept, query)
+                data_row = pandas.Series([date.date(), text_tokenize, find_hashtags], index=data_file.columns)
+                data_file = data_file.append(data_row, ignore_index=True)
+        data_file.to_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(keyword.replace('#', '')), index=False)
 
     def trend_tags(self, number):
         api = self.authentication()
-        WOEID = 23424960 # trend twitter in Thailand
+        WOEID = 23424960
         trends = api.trends_place(id=WOEID)
         # print(trends)
         trends_list = {}
