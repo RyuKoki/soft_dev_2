@@ -15,7 +15,7 @@ from Twidty_backend import Twidty
 from keyword_alert import Ui_Dialog as keyword_dialog
 from search_alert import Ui_Dialog as search_dialog
 from search_process import Ui_Dialog as search_p_dialog
-import datetime
+import datetime, threading
 
 
 class Ui_MainWindow(object):
@@ -63,6 +63,8 @@ class Ui_MainWindow(object):
         self.date_start.setCalendarPopup(True)
         self.date_start.setTimeSpec(QtCore.Qt.LocalTime)
         self.date_start.setDate(date.date())
+        self.date_start.setMinimumDate(datetime.date(2021, 2, 1))
+        self.date_start.setMaximumDate(date.date())
         self.date_start.setObjectName("date_start")
         self.label_line = QtWidgets.QLabel(self.centralwidget)
         self.label_line.setGeometry(QtCore.QRect(250, 90, 20, 50))
@@ -80,6 +82,8 @@ class Ui_MainWindow(object):
         self.date_stop.setCalendarPopup(True)
         self.date_stop.setTimeSpec(QtCore.Qt.LocalTime)
         self.date_stop.setDate(date.date())
+        self.date_stop.setMinimumDate(datetime.date(2021, 2, 1))
+        self.date_stop.setMaximumDate(date.date())
         self.date_stop.setObjectName("date_stop")
         self.search_button = QtWidgets.QPushButton(self.centralwidget)
         self.search_button.setGeometry(QtCore.QRect(400, 100, 180, 31))
@@ -187,6 +191,7 @@ class Ui_MainWindow(object):
                 size = dict_result.values()
 
                 self.widget_showgraph.canvas.axes.clear()
+                self.widget_showgraph.canvas.axes.set_title(keyword)
                 self.widget_showgraph.canvas.axes.pie(size, labels=name, 
                                                             autopct='%1.1f%%',  
                                                             startangle=10, )
@@ -203,17 +208,22 @@ class Ui_MainWindow(object):
                 Dialog.show()
                 user_acting = Dialog.exec_()
                 if user_acting == QtWidgets.QDialog.Accepted:
-                    twidty.search(keyword)
+                    # twidty.search(keyword)
+                    thr_search = threading.Thread(target=twidty.search, args=(keyword, ))
+                    thr_search.start()
+                    if thr_search.is_alive():
+                        s_Dialog = QtWidgets.QDialog()
+                        s_ui = search_p_dialog()
+                        s_ui.setupUi(s_Dialog)
+                        s_Dialog.show()
+                        thr_search.join()
+                        s_Dialog.exec_()
+
                     self.keyword_input.setText("")
                     date = datetime.datetime.now()
                     self.date_start.setDate(date.date())
                     self.date_stop.setDate(date.date())
-                    s_Dialog = QtWidgets.QDialog()
-                    s_ui = search_p_dialog()
-                    s_ui.setupUi(s_Dialog)
-                    s_Dialog.show()
-                    s_Dialog.exec_()
-                self.keyword_input.setText("")
+
         else:
             Dialog = QtWidgets.QDialog()
             ui = keyword_dialog()
@@ -240,8 +250,6 @@ class Ui_MainWindow(object):
         for number in range(len(trend_now)):
             text = "{}\t{}".format(number+1, name[number])
             self.widget_showtrendtags.appendPlainText(text)
-
-
 
 if __name__ == "__main__":
     import sys
