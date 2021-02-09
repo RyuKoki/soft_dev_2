@@ -112,7 +112,7 @@ class Twidty(object):
                 break
 
         df = df.sort_values(by='Date')
-        df.to_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(keyword.replace('#', '')), index=False)
+        df.to_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')), index=False) # xxxxxxxxxxxx is path of directory that you want to save
 
     def update_data(self, keyword):
         api = self.authentication()
@@ -121,13 +121,12 @@ class Twidty(object):
                                 q=query+'-filter:retweets', 
                                 result_type='recent', 
                                 tweet_mode='extended').items(100)
-        data_file = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(keyword.replace('#', '')))
+        lastest_row = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))# xxxxxxxxxxxx is path of directory that you want to save
+        data_file = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))
+        today = datetime.datetime.now().date()
         for tweet in tweets:
             date = tweet.created_at
-            today = datetime.datetime.now()
-            if date.date() != today.date():
-                break
-            elif date.date() == today.date():
+            if date.date() == today:
                 try:
                     text = tweet.retweeted_status.full_text
                 except:
@@ -138,7 +137,40 @@ class Twidty(object):
                 text_tokenize = self.nlp(text_intercept, query)
                 data_row = pandas.Series([date.date(), text_tokenize, find_hashtags], index=data_file.columns)
                 data_file = data_file.append(data_row, ignore_index=True)
-        data_file.to_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(keyword.replace('#', '')), index=False)
+
+                check_row = len(data_file.index)
+                if check_row == len(lastest_row)+100:
+                    break
+        data_file.to_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')), index=False)
+
+    def update_data_by_date(self, keyword, year, month, day):
+        api = self.authentication()
+        query = str(keyword).replace('#', '')
+        tweets = tweepy.Cursor(api.search, 
+                                q=query+'-filter:retweets', 
+                                count=100, 
+                                result_type='recent', 
+                                tweet_mode='extended').items()
+        lastest_row = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))
+        data_file = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))
+        for tweet in tweets:
+            date = tweet.created_at
+            if date.date() == datetime.date(year, month, day):
+                try:
+                    text = tweet.retweeted_status.full_text
+                except:
+                    text = tweet.full_text
+
+                find_hashtags = self.check_hashtags(text)
+                text_intercept = self.text_intercept(text)
+                text_tokenize = self.nlp(text_intercept, query)
+                data_row = pandas.Series([date.date(), text_tokenize, find_hashtags], index=data_file.columns)
+                data_file = data_file.append(data_row, ignore_index=True)
+
+                check_row = len(data_file.index)
+                if check_row == len(lastest_row)+100:
+                    break
+        data_file.to_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')), index=False)
 
     def trend_tags(self, number):
         api = self.authentication()
