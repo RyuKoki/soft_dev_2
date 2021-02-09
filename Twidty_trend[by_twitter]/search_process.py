@@ -15,31 +15,25 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(400, 125)
-        self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
-        self.buttonBox.setGeometry(QtCore.QRect(20, 70, 360, 40))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.buttonBox.setFont(font)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.setCenterButtons(True)
-        self.buttonBox.setObjectName("buttonBox")
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setGeometry(QtCore.QRect(20, 10, 360, 61))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.label.setFont(font)
         self.label.setObjectName("label")
+        self.pushButton = QtWidgets.QPushButton(Dialog)
+        self.pushButton.setGeometry(QtCore.QRect(160, 80, 75, 23))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton.clicked.connect(Dialog.accept)
 
         self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept)
-        self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Twidty Notification"))
+        Dialog.setWindowTitle(_translate("Dialog", "Searching Status"))
         self.label.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">Your keyword\'s already searched!!!</p><p align=\"center\">Please search keyword again.</p></body></html>"))
+        self.pushButton.setText(_translate("Dialog", "Finish"))
 
 
 if __name__ == "__main__":
