@@ -194,15 +194,24 @@ class Twidty(object):
         search_file = keyword.replace('#', '')
         file_name = "{}.csv".format(search_file)
         db = os.listdir('data')
-        if '#' in keyword and file_name in db:
-            df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
-            new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
-            counter = self.extend_items(new_df['Hashtag'])
-            return counter
-        elif '#' not in keyword and file_name in db:
-            df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
-            new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
-            counter = self.extend_items(new_df['Text'])
-            return counter
-        if file_name not in db:
+        if file_name in db:
+            if '#' in keyword:
+                df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
+                if stop != df['Date'].max() or start != df['Date'].min():
+                    start_date = df['Date'].min()
+                    end_date = df['Date'].max()
+                    return [0, start_date, end_date]
+                new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
+                counter = self.extend_items(new_df['Hashtag'])
+                return counter
+            elif '#' not in keyword:
+                df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
+                if stop != df['Date'].max() or start != df['Date'].min():
+                    start_date = df['Date'].min()
+                    end_date = df['Date'].max()
+                    return [0, start_date, end_date]
+                new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
+                counter = self.extend_items(new_df['Text'])
+                return counter
+        elif file_name not in db:
             return False
