@@ -180,33 +180,56 @@ class Ui_MainWindow(object):
         self.trendtags_graph()
         self.show_trendtags()
 
+    def update_alert(self, min_date, max_date):
+        update_D = QtWidgets.QDialog()
+        update_ui = update_alert()
+        update_ui.setupUi(update_D, min_date, max_date)
+        update_D.show()
+        user_request = update_D.exec_()
+        return user_request
+
+    def search_alert(self):
+        Dialog = QtWidgets.QDialog()
+        ui = search_dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        user_acting = Dialog.exec_()
+        return user_acting    
+    
     def poptrend_graph(self):
         # print('poptrend')
+        today = datetime.datetime.now()
         keyword = self.keyword_input.text()
         if keyword != "":
             twidty = Twidty()
             dict_result = twidty.frequency_analysis(keyword, self.date_start.text(), self.date_stop.text())
             if dict_result != False:
-                name = dict_result.keys()
-                size = dict_result.values()
+                if dict_result[0] == 0:
+                    response = self.update_alert(dict_result[1], dict_result[2])
+                    if response == QtWidgets.QDialog.Accepted:
 
-                self.widget_showgraph.canvas.axes.clear()
-                self.widget_showgraph.canvas.axes.set_title(keyword)
-                self.widget_showgraph.canvas.axes.pie(size, labels=name, 
+                        self.keyword_input.setText("")
+                        self.date_start.setDate(today.date())
+                        self.date_stop.setDate(today.date())
+
+                else:
+
+                    name = dict_result.keys()
+                    size = dict_result.values()
+
+                    self.widget_showgraph.canvas.axes.clear()
+                    self.widget_showgraph.canvas.axes.set_title(keyword)
+                    self.widget_showgraph.canvas.axes.pie(size, labels=name, 
                                                             autopct='%1.1f%%',  
                                                             startangle=10, )
 
-                self.widget_showgraph.canvas.draw()
-                self.keyword_input.setText("")
-                date = datetime.datetime.now()
-                self.date_start.setDate(date.date())
-                self.date_stop.setDate(date.date())
+                    self.widget_showgraph.canvas.draw()
+
+                    self.keyword_input.setText("")
+                    self.date_start.setDate(today.date())
+                    self.date_stop.setDate(today.date())
             else:
-                Dialog = QtWidgets.QDialog()
-                ui = search_dialog()
-                ui.setupUi(Dialog)
-                Dialog.show()
-                user_acting = Dialog.exec_()
+                user_acting = self.search_alert()
                 if user_acting == QtWidgets.QDialog.Accepted:
                     # twidty.search(keyword)
                     thr_search = threading.Thread(target=twidty.search, args=(keyword, ))
