@@ -1,217 +1,200 @@
-import tweepy, pandas, re, emoji, spacy, pythainlp, collections, datetime, os, ast, operator
+import tweepy, pandas, re, emoji, spacy, pythainlp, collections, datetime, os, ast, operator, threading
 
 
 class Twidty(object):
 
-    def __init__(self):
-        # consumer keys and authentication tokens
-        # from https://developer.twitter.com
-        self.consumer_key = 'xxxxxxxxxx'
-        self.consumer_secret = 'xxxxxxxxxx'
-        self.access_token = 'xxxxxxxxxx'
-        self.access_token_secret = 'xxxxxxxxxx'
+	def __init__(self):
+		# consumer keys and authentication tokens
+		# from https://developer.twitter.com
+		self.consumer_key = '6YoJmNcWWAgrEBWClO9HX7aeF'
+		self.consumer_secret = 'IM1i6jHiUSldvn1ICuU9iBsJFrepNHs29oU8sURus3M2xSV8gw'
+		self.access_token = '1347522958655246340-6OyS3aztWGGTO0CVBghfb5wHORjSgH'
+		self.access_token_secret = 'HjhkstwRscsxYYKLY7JcYDG7B40545U5RfSyvnjgnkEY4'
 
-    def authentication(self):
-        # confirm identity
-        auth = tweepy.OAuthHandler(self.consumer_key, self.consumer_secret)
-        auth.set_access_token(self.access_token, self.access_token_secret)
-        api = tweepy.API(auth)
-        return api
+	def authentication(self):
+		# confirm identity
+		auth = tweepy.OAuthHandler(self.consumer_key, self.consumer_secret)
+		auth.set_access_token(self.access_token, self.access_token_secret)
+		api = tweepy.API(auth)
+		return api
 
-    def text_intercept(self, text):
-        all_emoji = emoji.UNICODE_EMOJI
-        for i in text:
-            if i in all_emoji:
-                text = text.replace(i, '')
-        mention_pattern = r'(?:@[\w_]+)'
-        hashtag_pattern = r"(?:\#+[\w\ก-๙_]+[\w\ก-๙\'_\-]*[\w\ก-๙_]+)"
-        web_pattern = r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+'
-        enter_pattern = r'[\n\t]'
-        punctuations = r'[\!\(\)\-\[\]\{\}\:\;\'\\\"\,\<\>\.\/\?\@\$\%\^\&\*\_\~\ๆ]'
-        del_ment = re.sub(mention_pattern, '', text)
-        del_tags = re.sub(hashtag_pattern, '', del_ment)
-        del_web = re.sub(web_pattern, '', del_tags)
-        del_enter = re.sub(enter_pattern, '', del_web)
-        del_punct = re.sub(punctuations, '', del_enter)
-        return del_punct
+	def text_intercept(self, text):
+		all_emoji = emoji.UNICODE_EMOJI
+		for i in text:
+			if i in all_emoji:
+				text = text.replace(i, '')
+		mention_pattern = r'(?:@[\w_]+)'
+		hashtag_pattern = r"(?:\#+[\w\ก-๙_]+[\w\ก-๙\'_\-]*[\w\ก-๙_]+)"
+		web_pattern = r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+'
+		enter_pattern = r'[\n\t]'
+		punctuations = r'[\!\(\)\-\[\]\{\}\:\;\'\\\"\,\<\>\.\/\?\@\$\%\^\&\*\_\~\ๆ]'
+		del_ment = re.sub(mention_pattern, '', text)
+		del_tags = re.sub(hashtag_pattern, '', del_ment)
+		del_web = re.sub(web_pattern, '', del_tags)
+		del_enter = re.sub(enter_pattern, '', del_web)
+		del_punct = re.sub(punctuations, '', del_enter)
+		return del_punct
 
-    def check_hashtags(self, text):
-        # have to '#' at least 1
-        # This is for thai and english language 
-        hashtags_str = r"(?:\#+[\w\ก-๙_]+[\w\ก-๙\'_\-]*[\w\ก-๙_]+)"
-        # find hashtags in tweet
-        hashtags_regex = re.findall(hashtags_str, text)
-        # print(hashtags_regex.findall(text))
-        return hashtags_regex
+	def check_hashtags(self, text):
+		# have to '#' at least 1
+		# This is for thai and english language 
+		hashtags_str = r"(?:\#+[\w\ก-๙_]+[\w\ก-๙\'_\-]*[\w\ก-๙_]+)"
+		# find hashtags in tweet
+		hashtags_regex = re.findall(hashtags_str, text)
+		# print(hashtags_regex.findall(text))
+		return hashtags_regex
 
-    def nlp(self, text, keyword):
-        spacy.load('en_core_web_sm')
-        stopword_en = list(spacy.lang.en.stop_words.STOP_WORDS) # 362 words
-        stopword_th = list(pythainlp.corpus.thai_stopwords()) # 1030 words
-        process = pythainlp.word_tokenize(text, engine='newmm') # list type
-        result = []
-        for word in process:
-            if word in stopword_th or word in stopword_en or word == keyword:
-                pass
-            else:
-                result.append(word)
+	def nlp(self, text, keyword):
+		spacy.load('en_core_web_sm')
+		stopword_en = list(spacy.lang.en.stop_words.STOP_WORDS) # 362 words
+		stopword_th = list(pythainlp.corpus.thai_stopwords()) # 1030 words
+		process = pythainlp.word_tokenize(text, engine='newmm') # list type
+		result = []
+		for word in process:
+			if word in stopword_th or word in stopword_en or word == keyword or word == ' ':
+				continue
+			else:
+				result.append(word)
 
-        return result
+		return result
 
-    def frequency_word(self, text_list):
-        frequency = dict(collections.Counter(text_list))
-        try:
-            frequency.pop(' ')
-            frequency.pop(' '*2)
-            frequency.pop(' '*3)
-            frequency.pop(' '*4)
-            frequency.pop(' '*5)
-            frequency.pop(' '*6)
-        except:
-            pass
+	def frequency_word(self, text_list):
+		frequency = dict(collections.Counter(text_list))
+		try:
+			frequency.pop(' ')
+		except:
+			pass
 
-        try:
-            ranking = dict(sorted(frequency.items(), 
-                                    key=operator.itemgetter(1), 
-                                    reverse=True)[:5])
-        except:
-            pass
-        return ranking
+		try:
+			ranking = dict(sorted(frequency.items(), 
+									key=operator.itemgetter(1), 
+									reverse=True)[:5])
+		except:
+			pass
+		return ranking
 
-    def extend_items(self, items_list):
-        list_output = []
-        for a_list in items_list:
-            list_output.extend(ast.literal_eval(a_list))
-        return self.frequency_word(list_output)
+	def extend_items(self, items_list):
+		list_output = []
+		for a_list in items_list:
+			list_output.extend(ast.literal_eval(a_list))
+		return self.frequency_word(list_output)
 
-    def search(self, keyword):
-        api = self.authentication()
-        query = str(keyword).replace('#', '')
-        tweets = tweepy.Cursor(api.search, 
-                                q=query+'-filter:retweets', 
-                                count=100, 
-                                result_type='recent', 
-                                tweet_mode='extended').items()
-        df = pandas.DataFrame(columns=['Date', 'Text', 'Hashtag'])
-        for tweet in tweets:
-            date = tweet.created_at
+	def search(self, keyword, start, stop):
+		api = self.authentication()
+		query = str(keyword).replace('#', '')
 
-            try:
-                text = tweet.retweeted_status.full_text
-            except:
-                text = tweet.full_text
+		df_tokenize = pandas.DataFrame(columns=['Date', 'Text', 'Hashtag'])
 
-            find_hashtags = self.check_hashtags(text)
-            text_intercept = self.text_intercept(text)
-            text_tokenize = self.nlp(text_intercept, query)
-            data_row = pandas.Series([date.date(), text_tokenize, find_hashtags], index=df.columns)
-            df = df.append(data_row, ignore_index=True)
-            
-            count_row = len(df.index)
-            if count_row == 100:
-                break
+		df_text = pandas.DataFrame(columns=['Date', 'Text'])
 
-        df = df.sort_values(by='Date')
-        df.to_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')), index=False) # xxxxxxxxxxxx is path of directory that you want to save
+		start_d = datetime.datetime.strptime(start, '%Y-%m-%d')
+		stop_d = datetime.datetime.strptime(stop, '%Y-%m-%d')
+		step_d = datetime.timedelta(days=1)
+		while start_d <= stop_d:
+			tweets = tweepy.Cursor(api.search, 
+									q=query+'-filter:retweets', 
+									since=str(start_d.date()), 
+									until=str((start_d+step_d).date()), 
+									result_type='recent', 
+									tweet_mode='extended').items(50)
+			for tweet in tweets:
+				date = tweet.created_at.date()
+				try:
+					text = tweet.retweeted_status.full_text
+				except:
+					text = tweet.full_text
+				
+				text_intercept = self.text_intercept(text)
+				text_intercept = " ".join(text_intercept.split())
+				data_row_text = pandas.Series([date, text_intercept], index=df_text.columns)
+				df_text = df_text.append(data_row_text, ignore_index=True)
 
-    def update_data(self, keyword):
-        api = self.authentication()
-        query = str(keyword).replace('#', '')
-        tweets = tweepy.Cursor(api.search, 
-                                q=query+'-filter:retweets', 
-                                result_type='recent', 
-                                tweet_mode='extended').items(100)
-        lastest_row = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))# xxxxxxxxxxxx is path of directory that you want to save
-        data_file = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))
-        today = datetime.datetime.now().date()
-        for tweet in tweets:
-            date = tweet.created_at
-            if date.date() == today:
-                try:
-                    text = tweet.retweeted_status.full_text
-                except:
-                    text = tweet.full_text
+				find_hashtags = self.check_hashtags(text)
+				
+				text_tokenize = self.nlp(text_intercept, query)
+				data_row_tok = pandas.Series([date, text_tokenize, find_hashtags], index=df_tokenize.columns)
+				df_tokenize = df_tokenize.append(data_row_tok, ignore_index=True)
 
-                find_hashtags = self.check_hashtags(text)
-                text_intercept = self.text_intercept(text)
-                text_tokenize = self.nlp(text_intercept, query)
-                data_row = pandas.Series([date.date(), text_tokenize, find_hashtags], index=data_file.columns)
-                data_file = data_file.append(data_row, ignore_index=True)
+			start_d += step_d
 
-                check_row = len(data_file.index)
-                if check_row == len(lastest_row)+100:
-                    break
-        data_file.to_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')), index=False)
+		df_tokenize.to_csv(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_tokenize\{}.csv'.format(query), index=False)
+		df_text.to_csv(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_text\{}.csv'.format(query), index=False)
 
-    def update_data_by_date(self, keyword, year, month, day):
-        api = self.authentication()
-        query = str(keyword).replace('#', '')
-        tweets = tweepy.Cursor(api.search, 
-                                q=query+'-filter:retweets', 
-                                count=100, 
-                                result_type='recent', 
-                                tweet_mode='extended').items()
-        lastest_row = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))
-        data_file = pandas.read_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')))
-        for tweet in tweets:
-            date = tweet.created_at
-            if date.date() == datetime.date(year, month, day):
-                try:
-                    text = tweet.retweeted_status.full_text
-                except:
-                    text = tweet.full_text
 
-                find_hashtags = self.check_hashtags(text)
-                text_intercept = self.text_intercept(text)
-                text_tokenize = self.nlp(text_intercept, query)
-                data_row = pandas.Series([date.date(), text_tokenize, find_hashtags], index=data_file.columns)
-                data_file = data_file.append(data_row, ignore_index=True)
+	def update_data_by_date(self, keyword, year, month, day):
+		api = self.authentication()
+		query = str(keyword).replace('#', '')
+		due_date = datetime.date(year, month, day)
+		next_date = datetime.timedelta(days=1)
+		tweets = tweepy.Cursor(api.search, 
+								q=query+'-filter:retweets', 
+								since=str(due_date), 
+								until=str(due_date+next_date), 
+								result_type='recent', 
+								tweet_mode='extended').items(50)
+		# lastest_row = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\twidty_tokenize\{}.csv'.format(query))
+		file_token = pandas.read_csv(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_tokenize\{}.csv'.format(query))
+		file_text = pandas.read_csv(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_text\{}.csv'.format(query))
+		for tweet in tweets:
+			date = tweet.created_at.date()
+			try:
+				text = tweet.retweeted_status.full_text
+			except:
+				text = tweet.full_text
+			text_intercept = self.text_intercept(text)
+			text_intercept = " ".join(text_intercept.split())
+			data_row_text = pandas.Series([date, text_intercept], index=file_text.columns)
+			file_text = file_text.append(data_row_text, ignore_index=True)
 
-                check_row = len(data_file.index)
-                if check_row == len(lastest_row)+100:
-                    break
-        data_file.to_csv(r'xxxxxxxxxxxxxxx\{}.csv'.format(keyword.replace('#', '')), index=False)
+			find_hashtags = self.check_hashtags(text)
+			text_tokenize = self.nlp(text_intercept, query)
 
-    def trend_tags(self, number):
-        api = self.authentication()
-        WOEID = 23424960
-        trends = api.trends_place(id=WOEID)
-        # print(trends)
-        trends_list = {}
-        for i in trends:
-            for j in i['trends']:
-                if j['tweet_volume'] == None:
-                    pass
-                elif j['tweet_volume'] != None:
-                    key, values = j['name'], j['tweet_volume']
-                    trends_list.update({key:values})
-        ranking = dict(sorted(trends_list.items(), 
-                                    key=operator.itemgetter(1), 
-                                    reverse=True)[:int(number)])
-        return ranking
+			data_row = pandas.Series([date, text_tokenize, find_hashtags], index=file_token.columns)
+			file_token = file_token.append(data_row, ignore_index=True)
 
-    def frequency_analysis(self, keyword, start, stop):
-        search_file = keyword.replace('#', '')
-        file_name = "{}.csv".format(search_file)
-        db = os.listdir('data')
-        if file_name in db:
-            if '#' in keyword:
-                df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
-                if stop != df['Date'].max() or start != df['Date'].min():
-                    start_date = df['Date'].min()
-                    end_date = df['Date'].max()
-                    return [0, start_date, end_date]
-                new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
-                counter = self.extend_items(new_df['Hashtag'])
-                return counter
-            elif '#' not in keyword:
-                df = pandas.read_csv(r'D:\vs code\soft_dev_2\twitter\data\{}.csv'.format(search_file))
-                if stop != df['Date'].max() or start != df['Date'].min():
-                    start_date = df['Date'].min()
-                    end_date = df['Date'].max()
-                    return [0, start_date, end_date]
-                new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
-                counter = self.extend_items(new_df['Text'])
-                return counter
-        elif file_name not in db:
-            return False
+		file_token.to_csv(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_tokenize\{}.csv'.format(query), index=False)
+		file_text.to_csv(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_text\{}.csv'.format(query), index=False)
+
+	def trend_tags(self, number):
+		api = self.authentication()
+		WOEID = 23424960
+		trends = api.trends_place(id=WOEID)
+		# print(trends)
+		trends_list = {}
+		for i in trends:
+			for j in i['trends']:
+				if j['tweet_volume'] == None:
+					pass
+				elif j['tweet_volume'] != None:
+					key, values = j['name'], j['tweet_volume']
+					trends_list.update({key:values})
+		ranking = dict(sorted(trends_list.items(), 
+									key=operator.itemgetter(1), 
+									reverse=True)[:int(number)])
+		return ranking
+
+	def frequency_analysis(self, keyword, start, stop):
+		search_file = keyword.replace('#', '')
+		file_name = "{}.csv".format(search_file)
+		db = os.listdir(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_tokenize')
+		df = pandas.read_csv(r'D:\vs code\soft_dev_2\midterm_pro\data\twidty_tokenize\{}.csv'.format(search_file))
+		all_date = list(df['Date'])
+		if file_name in db:
+			if '#' in keyword:
+				if start not in all_date or stop not in all_date:
+					start_date = df['Date'].min()
+					end_date = df['Date'].max()
+					return [0, start_date, end_date]
+				new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
+				counter = self.extend_items(new_df['Hashtag'])
+				return dict(counter)
+			elif '#' not in keyword:
+				if start not in all_date or stop not in all_date:
+					start_date = df['Date'].min()
+					end_date = df['Date'].max()
+					return [0, start_date, end_date]
+				new_df = df.loc[(df['Date'] >= start) & (df['Date'] <= stop)]
+				counter = self.extend_items(new_df['Text'])
+				return dict(counter)
+		elif file_name not in db:
+			return False
