@@ -6,10 +6,10 @@ class Twidty(object):
 	def __init__(self):
 		# consumer keys and authentication tokens
 		# from https://developer.twitter.com
-		self.consumer_key = '6YoJmNcWWAgrEBWClO9HX7aeF'
-		self.consumer_secret = 'IM1i6jHiUSldvn1ICuU9iBsJFrepNHs29oU8sURus3M2xSV8gw'
-		self.access_token = '1347522958655246340-6OyS3aztWGGTO0CVBghfb5wHORjSgH'
-		self.access_token_secret = 'HjhkstwRscsxYYKLY7JcYDG7B40545U5RfSyvnjgnkEY4'
+		self.consumer_key = 'xxx'
+		self.consumer_secret = 'xxx'
+		self.access_token = 'xxx'
+		self.access_token_secret = 'xxx'
 
 	def authentication(self):
 		# confirm identity
